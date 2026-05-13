@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Student Hour Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --api: "https://script.google.com/macros/s/AKfycbxbXAp03kp4DpFyFPr6xiZqgw5UVgR-sFPDXXPaZEjc5aUOkPMxjyztKWAf2ygZjp8_6Q/exec";
+    --green: #0F6E56; --green-lt: #E1F5EE; --green-dk: #085041;
+    --amber: #854F0B; --amber-lt: #FAEEDA;
+    --blue: #0C447C; --blue-lt: #E6F1FB;
+    --purple: #3C3489; --purple-lt: #EEEDFE;
+    --coral: #993C1D; --coral-lt: #FAECE7;
+    --teal-lt: #E1F5EE; --teal: #0F6E56;
+    --red: #A32D2D; --red-lt: #FCEBEB;
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.10);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1c1c1a;
+    --text2: #6b6b65;
+    --text3: #a0a09a;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1.25rem 1rem;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 700px; margin: 0 auto; }
+  .app-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;
+  }
+  .app-title {
+    font-size: 17px; font-weight: 500; display: flex; align-items: center; gap: 8px; color: var(--text);
+  }
+  .card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.25rem;
+  }
+  .card + .card { margin-top: 10px; }
+  label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; font-weight: 500; letter-spacing: .02em; }
+  input[type=text], input[type=number], input[type=password], select, textarea {
+    width: 100%; padding: 8px 10px;
+    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text);
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #378ADD; box-shadow: 0 0 0 3px rgba(55,138,221,0.12);
+  }
+  textarea { resize: vertical; }
+  button {
+    background: var(--surface); color: var(--text);
+    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    padding: 7px 14px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background .12s, transform .1s; white-space: nowrap;
+  }
+  button:hover { background: var(--bg); }
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-primary {
+    background: var(--text); color: var(--surface); border-color: var(--text); font-weight: 500;
+  }
+  .btn-primary:hover { background: #333330; }
+  .btn-sm { font-size: 12px; padding: 4px 10px; }
+  .tab-bar { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 1.25rem; gap: 0; overflow-x: auto; }
+  .tab-btn {
+    background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0;
+    padding: 8px 14px; font-size: 13px; color: var(--text2); cursor: pointer;
+    transition: all .15s; margin-bottom: -1px; white-space: nowrap; font-family: 'DM Sans', sans-serif;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+  .tab-btn:hover { background: var(--bg); color: var(--text); }
+  .metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1.25rem; }
+  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: .85rem; text-align: center; }
+  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .05em; font-weight: 500; }
+  .metric-val { font-size: 22px; font-weight: 500; font-family: 'DM Mono', monospace; }
+  .sec-title { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .b-teal { background: var(--teal-lt); color: var(--teal); }
+  .b-amber { background: var(--amber-lt); color: var(--amber); }
+  .b-blue { background: var(--blue-lt); color: var(--blue); }
+  .b-purple { background: var(--purple-lt); color: var(--purple); }
+  .b-coral { background: var(--coral-lt); color: var(--coral); }
+  .b-green { background: #EAF3DE; color: #3B6D11; }
+  .b-red { background: var(--red-lt); color: var(--red); }
+  .log-row {
+    display: grid; grid-template-columns: 65px minmax(0,1fr) 52px 70px;
+    gap: 8px; align-items: center; padding: 7px 0;
+    border-bottom: 0.5px solid var(--border); font-size: 13px;
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-hdr { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+  .res-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
+  .res-item:last-child { border-bottom: none; }
+  .pending-row {
+    display: grid; grid-template-columns: 90px minmax(0,1fr) 52px 115px;
+    gap: 8px; align-items: center; padding: 8px 0;
+    border-bottom: 0.5px solid var(--border); font-size: 13px;
+  }
+  .pending-row:last-child { border-bottom: none; }
+  .empty { text-align: center; padding: 1.5rem; color: var(--text3); font-size: 13px; }
+  .admin-bar {
+    background: var(--amber-lt); border: 0.5px solid #EF9F27;
+    border-radius: var(--radius-sm); padding: 8px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1rem; font-size: 13px; color: #633806;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .student-bar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 12px; }
+  .note { font-size: 11px; color: var(--text3); }
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--border2); border-top-color: var(--text);
+    border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay {
+    text-align: center; padding: 2rem; color: var(--text2); font-size: 13px;
+  }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface); border-radius: var(--radius);
+    border: 0.5px solid var(--border); padding: 1.25rem;
+    width: 320px; max-width: 100%;
+  }
+  .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--surface);
+    padding: 7px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; opacity: 0; pointer-events: none;
+    transition: opacity .3s; z-index: 200; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+  .err-banner {
+    background: var(--red-lt); border: 0.5px solid #F09595;
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    font-size: 13px; color: var(--red); margin-bottom: 1rem;
+  }
+  @media (max-width: 500px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .log-row { grid-template-columns: 55px minmax(0,1fr) 42px 60px; }
+    .pending-row { grid-template-columns: 70px minmax(0,1fr) 42px 100px; }
+    .metrics { gap: 6px; }
+    .metric-val { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="app-header">
+    <div class="app-title">
+      <i class="ti ti-clock" aria-hidden="true" style="font-size:20px"></i>
+      Student hour tracker
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="sync-status" style="font-size:12px;color:var(--text3)"></span>
+      <button onclick="showAdminLogin()" id="admin-btn" style="font-size:12px;padding:5px 11px;color:var(--text2)">
+        <i class="ti ti-shield" aria-hidden="true"></i> Admin
+      </button>
+    </div>
+  </div>
+
+  <div id="admin-bar" style="display:none" class="admin-bar">
+    <i class="ti ti-shield-check" aria-hidden="true"></i>
+    <span style="font-weight:500">Admin mode active</span>
+    <button onclick="toggleAdmin()" style="margin-left:auto;font-size:12px;padding:4px 10px;color:#633806;border-color:#EF9F27">Exit</button>
+  </div>
+
+  <div id="err-banner" class="err-banner" style="display:none"></div>
+
+  <div class="student-bar">
+    <div>
+      <label style="margin-bottom:5px">Current student</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="student-select" style="width:auto;min-width:170px" onchange="switchStudent()">
+          <option>Loading…</option>
+        </select>
+        <button onclick="showAddStudent()" style="font-size:12px;padding:5px 11px">
+          <i class="ti ti-plus" aria-hidden="true"></i> Add student
+        </button>
+      </div>
+    </div>
+    <div class="metrics" style="min-width:260px">
+      <div class="metric">
+        <div class="metric-label">Earned</div>
+        <div class="metric-val" id="total-earned" style="color:var(--green)">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Spent</div>
+        <div class="metric-val" id="total-spent" style="color:var(--amber)">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Balance</div>
+        <div class="metric-val" id="balance">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('log')" id="tab-log"><i class="ti ti-clock" aria-hidden="true"></i> Log hours</button>
+    <button class="tab-btn" onclick="switchTab('resources')" id="tab-resources"><i class="ti ti-gift" aria-hidden="true"></i> Spend hours</button>
+    <button class="tab-btn" onclick="switchTab('history')" id="tab-history"><i class="ti ti-list" aria-hidden="true"></i> History</button>
+    <button class="tab-btn" onclick="switchTab('admin')" id="tab-admin" style="display:none"><i class="ti ti-shield-check" aria-hidden="true"></i> Requests</button>
+  </div>
+
+  <!-- LOG TAB -->
+  <div id="view-log">
+    <div class="card" style="margin-bottom:10px">
+      <p class="sec-title">Log project work</p>
+      <div class="form-grid">
+        <div><label>Project name</label><input type="text" id="project-name" placeholder="e.g. Science fair" /></div>
+        <div><label>Hours worked</label><input type="number" id="hours-input" min="0.5" max="24" step="0.5" placeholder="e.g. 2" /></div>
+      </div>
+      <div style="margin-bottom:12px"><label>Notes (optional)</label><textarea id="notes-input" rows="2" placeholder="What did you work on?"></textarea></div>
+      <button class="btn-primary" onclick="logHours()" id="btn-log">
+        <i class="ti ti-plus" aria-hidden="true"></i> Add hours
+      </button>
+    </div>
+    <p class="sec-title" style="margin-top:1.25rem">Recent entries</p>
+    <div id="recent-log"><div class="loading-overlay"><span class="spinner"></span> Loading…</div></div>
+  </div>
+
+  <!-- RESOURCES TAB -->
+  <div id="view-resources" style="display:none">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">
+      Select a resource to submit a request. Balance: <strong id="balance-inline">—</strong>
+    </p>
+    <div id="resources-list"></div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="view-history" style="display:none">
+    <div class="log-row" style="padding:5px 0 7px;border-bottom:0.5px solid var(--border2);margin-bottom:4px">
+      <span class="log-hdr">Date</span>
+      <span class="log-hdr">Description</span>
+      <span class="log-hdr">Hours</span>
+      <span class="log-hdr">Type</span>
+    </div>
+    <div id="history-list"><div class="loading-overlay"><span class="spinner"></span> Loading…</div></div>
+  </div>
+
+  <!-- ADMIN TAB -->
+  <div id="view-admin" style="display:none">
+    <div style="margin-bottom:1.5rem">
+      <p class="sec-title">Pending requests — all students</p>
+      <div id="pending-list"><div class="loading-overlay"><span class="spinner"></span> Loading…</div></div>
+    </div>
+    <div>
+      <p class="sec-title">Approved / denied history</p>
+      <div id="resolved-list"><div class="empty">—</div></div>
+    </div>
+  </div>
+
+</div><!-- .wrap -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxbXAp03kp4DpFyFPr6xiZqgw5UVgR-sFPDXXPaZEjc5aUOkPMxjyztKWAf2ygZjp8_6Q/exec";
+const ADMIN_PIN = "1234";
+
+const RESOURCES = [
+  {id:'r1',name:"Pencils & pens set",cat:"School supplies",cost:1,icon:"✏️",badge:"b-blue"},
+  {id:'r2',name:"Notebook (wide-ruled)",cat:"School supplies",cost:1,icon:"📓",badge:"b-blue"},
+  {id:'r3',name:"Ruler & geometry set",cat:"School supplies",cost:1,icon:"📐",badge:"b-blue"},
+  {id:'r4',name:"Colored markers pack",cat:"Art & hobby",cost:1,icon:"🎨",badge:"b-purple"},
+  {id:'r5',name:"Sketchbook",cat:"Art & hobby",cost:1,icon:"📒",badge:"b-purple"},
+  {id:'r6',name:"Watercolor set",cat:"Art & hobby",cost:1,icon:"🖌️",badge:"b-purple"},
+  {id:'r7',name:"Craft kit (DIY)",cat:"Art & hobby",cost:1,icon:"✂️",badge:"b-purple"},
+  {id:'r8',name:"Jump rope",cat:"Sports gear",cost:1,icon:"🪢",badge:"b-teal"},
+  {id:'r9',name:"Sports water bottle",cat:"Sports gear",cost:1,icon:"🥤",badge:"b-teal"},
+  {id:'r10',name:"Gym bag",cat:"Sports gear",cost:1,icon:"🎒",badge:"b-teal"},
+  {id:'r11',name:"Bus / transit pass",cat:"Transportation",cost:1,icon:"🚌",badge:"b-green"},
+  {id:'r12',name:"Rideshare credit",cat:"Transportation",cost:1,icon:"🚗",badge:"b-green"},
+  {id:'r13',name:"Bike-share day pass",cat:"Transportation",cost:1,icon:"🚲",badge:"b-green"},
+  {id:'r14',name:"School event ticket",cat:"Event tickets",cost:1,icon:"🎟️",badge:"b-coral"},
+  {id:'r15',name:"Community event ticket",cat:"Event tickets",cost:1,icon:"🎫",badge:"b-coral"},
+  {id:'r16',name:"Sports game ticket",cat:"Event tickets",cost:1,icon:"🏟️",badge:"b-coral"},
+];
+
+let adminMode = false;
+let students = [];
+let currentStudentId = null;
+let hoursCache = {};
+let requestsCache = {};
+let currentTab = 'log';
+
+function today() {
+  return new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+async function api(params) {
+  const url = API + '?' + new URLSearchParams(params).toString();
+  setSyncStatus('saving…');
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    setSyncStatus('');
+    if (data.error) throw new Error(data.error);
+    return data;
+  } catch(e) {
+    setSyncStatus('error');
+    showError('Connection error. Check your internet and try again.');
+    throw e;
+  }
+}
+
+function setSyncStatus(msg) {
+  const el = document.getElementById('sync-status');
+  if (msg === 'saving…') el.innerHTML = '<span class="spinner"></span> saving…';
+  else if (msg === 'error') el.innerHTML = '⚠ connection error';
+  else el.innerHTML = msg ? msg : '';
+}
+
+function showError(msg) {
+  const el = document.getElementById('err-banner');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+async function loadStudents() {
+  try {
+    const data = await api({action:'getStudents'});
+    students = data.students || [];
+    if (students.length) {
+      currentStudentId = students[0].id;
+    }
+    refreshSelect();
+    await loadCurrentStudent();
+  } catch(e) {
+    document.getElementById('student-select').innerHTML = '<option>Error loading</option>';
+  }
+}
+
+async function loadCurrentStudent() {
+  if (!currentStudentId) return;
+  try {
+    const [hData, rData] = await Promise.all([
+      api({action:'getHours', studentId: currentStudentId}),
+      api({action:'getRequests', studentId: currentStudentId})
+    ]);
+    hoursCache[currentStudentId] = hData.entries || [];
+    requestsCache[currentStudentId] = rData.requests || [];
+    refreshMetrics();
+    refreshRecentLog();
+    if (currentTab === 'history') refreshHistory();
+    if (currentTab === 'resources') refreshResources();
+  } catch(e) {}
+}
+
+function refreshSelect() {
+  const sel = document.getElementById('student-select');
+  if (!students.length) {
+    sel.innerHTML = '<option value="">No students yet</option>';
+    return;
+  }
+  sel.innerHTML = students.map(s =>
+    `<option value="${s.id}" ${s.id == currentStudentId ? 'selected' : ''}>${s.name}</option>`
+  ).join('');
+}
+
+function getStudentData() {
+  const hrs = hoursCache[currentStudentId] || [];
+  const reqs = requestsCache[currentStudentId] || [];
+  const earned = hrs.reduce((a,e) => a + parseFloat(e.hours||0), 0);
+  const spent = reqs.filter(r => r.status !== 'denied').reduce((a,r) => a + parseFloat(r.cost||0), 0);
+  const balance = earned - spent;
+  return {hrs, reqs, earned, spent, balance};
+}
+
+function refreshMetrics() {
+  const {earned, spent, balance} = getStudentData();
+  document.getElementById('total-earned').textContent = earned.toFixed(1);
+  document.getElementById('total-spent').textContent = spent.toFixed(1);
+  const bel = document.getElementById('balance');
+  bel.textContent = balance.toFixed(1);
+  bel.style.color = balance < 0 ? 'var(--red)' : balance > 0 ? 'var(--green)' : '';
+  document.getElementById('balance-inline').textContent = balance.toFixed(1) + ' hrs';
+}
+
+function refreshRecentLog() {
+  const {hrs} = getStudentData();
+  const el = document.getElementById('recent-log');
+  const entries = [...hrs].reverse().slice(0,5);
+  if (!entries.length) { el.innerHTML = '<div class="empty">No hours logged yet.</div>'; return; }
+  el.innerHTML = entries.map(e => `<div class="log-row">
+    <span style="color:var(--text2);font-size:12px">${e.date}</span>
+    <span>${e.project}${e.notes ? `<br><span class="note">${e.notes}</span>` : ''}</span>
+    <span style="color:var(--green);font-weight:500;font-family:'DM Mono',monospace">+${parseFloat(e.hours).toFixed(1)}</span>
+    <span><span class="badge b-teal">earned</span></span>
+  </div>`).join('');
+}
+
+function refreshHistory() {
+  const {hrs, reqs} = getStudentData();
+  const el = document.getElementById('history-list');
+  const combined = [
+    ...hrs.map(e => ({date:e.date, desc:e.project, notes:e.notes, delta:parseFloat(e.hours), type:'earned', ts: e.id})),
+    ...reqs.map(r => ({date:r.date, desc:r.resource, notes:'Status: '+r.status, delta:-parseFloat(r.cost), type:r.status==='denied'?'refunded':r.status, ts:r.id}))
+  ].sort((a,b) => b.ts > a.ts ? 1 : -1);
+  if (!combined.length) { el.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+  el.innerHTML = combined.map(e => {
+    const isPos = e.delta > 0;
+    const badgeClass = e.type === 'earned' ? 'b-teal' : e.type === 'denied' ? 'b-red' : 'b-amber';
+    return `<div class="log-row">
+      <span style="color:var(--text2);font-size:12px">${e.date}</span>
+      <span>${e.desc}${e.notes ? `<br><span class="note">${e.notes}</span>` : ''}</span>
+      <span style="color:${isPos?'var(--green)':'var(--red)'};font-weight:500;font-family:'DM Mono',monospace">${isPos?'+':''}${e.delta.toFixed(1)}</span>
+      <span><span class="badge ${badgeClass}">${e.type}</span></span>
+    </div>`;
+  }).join('');
+}
+
+function refreshResources() {
+  const {balance} = getStudentData();
+  const el = document.getElementById('resources-list');
+  const cats = [...new Set(RESOURCES.map(r => r.cat))];
+  el.innerHTML = cats.map(cat => {
+    const items = RESOURCES.filter(r => r.cat === cat);
+    return `<div class="card" style="margin-bottom:10px">
+      <p class="sec-title">${cat}</p>
+      ${items.map(r => `<div class="res-item">
+        <div style="width:34px;height:34px;border-radius:var(--radius-sm);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${r.icon}</div>
+        <div style="flex:1">
+          <p style="font-size:13px;font-weight:500">${r.name}</p>
+          <span class="badge b-amber">${r.cost} hr</span>
+        </div>
+        <button onclick="submitRequest('${r.id}')" ${balance < r.cost ? 'disabled' : ''} style="font-size:12px;padding:5px 12px">Request</button>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+async function refreshAdminPanel() {
+  document.getElementById('pending-list').innerHTML = '<div class="loading-overlay"><span class="spinner"></span> Loading…</div>';
+  try {
+    const data = await api({action:'getAllRequests'});
+    const all = data.requests || [];
+    const pending = all.filter(r => r.status === 'pending');
+    const resolved = all.filter(r => r.status !== 'pending').reverse().slice(0,20);
+
+    const pel = document.getElementById('pending-list');
+    if (!pending.length) { pel.innerHTML = '<div class="empty">No pending requests.</div>'; }
+    else {
+      pel.innerHTML = `<div class="pending-row" style="padding:5px 0 7px;border-bottom:0.5px solid var(--border2);margin-bottom:4px">
+        <span class="log-hdr">Student</span><span class="log-hdr">Resource</span><span class="log-hdr">Cost</span><span class="log-hdr">Action</span></div>` +
+      pending.map(r => `<div class="pending-row">
+        <span style="font-weight:500;font-size:12px">${r.studentName}</span>
+        <span>${r.resource}<br><span class="note">${r.date}</span></span>
+        <span>${r.cost} hr</span>
+        <span style="display:flex;gap:5px">
+          <button onclick="resolveRequest('${r.id}','approved','${r.studentId}',${r.cost},'${r.resource}')" class="btn-sm" style="color:var(--green)">Approve</button>
+          <button onclick="resolveRequest('${r.id}','denied','${r.studentId}',${r.cost},'${r.resource}')" class="btn-sm" style="color:var(--red)">Deny</button>
+        </span>
+      </div>`).join('');
+    }
+
+    const rel = document.getElementById('resolved-list');
+    if (!resolved.length) { rel.innerHTML = '<div class="empty">No resolved requests yet.</div>'; }
+    else {
+      rel.innerHTML = `<div class="log-row" style="padding:5px 0 7px;border-bottom:0.5px solid var(--border2);margin-bottom:4px">
+        <span class="log-hdr">Student</span><span class="log-hdr">Resource</span><span class="log-hdr">Cost</span><span class="log-hdr">Status</span></div>` +
+      resolved.map(r => `<div class="log-row">
+        <span style="font-weight:500;font-size:12px">${r.studentName}</span>
+        <span>${r.resource}<br><span class="note">${r.date}</span></span>
+        <span>${r.cost} hr</span>
+        <span><span class="badge ${r.status==='approved'?'b-teal':'b-red'}">${r.status}</span></span>
+      </div>`).join('');
+    }
+  } catch(e) {}
+}
+
+async function switchStudent() {
+  currentStudentId = document.getElementById('student-select').value;
+  hoursCache[currentStudentId] = null;
+  document.getElementById('recent-log').innerHTML = '<div class="loading-overlay"><span class="spinner"></span> Loading…</div>';
+  await loadCurrentStudent();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['log','resources','history','admin'].forEach(t => {
+    document.getElementById('view-'+t).style.display = t===tab ? 'block' : 'none';
+    const btn = document.getElementById('tab-'+t);
+    if (btn) btn.classList.toggle('active', t===tab);
+  });
+  if (tab === 'resources') refreshResources();
+  if (tab === 'history') refreshHistory();
+  if (tab === 'admin') refreshAdminPanel();
+}
+
+async function logHours() {
+  const name = document.getElementById('project-name').value.trim();
+  const hrs = parseFloat(document.getElementById('hours-input').value);
+  const notes = document.getElementById('notes-input').value.trim();
+  if (!name) { showToast('Enter a project name.'); return; }
+  if (!hrs || hrs <= 0) { showToast('Enter valid hours.'); return; }
+  if (!currentStudentId) { showToast('Select a student first.'); return; }
+  const btn = document.getElementById('btn-log');
+  btn.disabled = true;
+  try {
+    const entry = await api({action:'addHours', studentId:currentStudentId, project:name, hours:hrs, notes:notes||'', date:today()});
+    if (!hoursCache[currentStudentId]) hoursCache[currentStudentId] = [];
+    hoursCache[currentStudentId].push(entry);
+    document.getElementById('project-name').value = '';
+    document.getElementById('hours-input').value = '';
+    document.getElementById('notes-input').value = '';
+    refreshMetrics(); refreshRecentLog();
+    showToast(`+${hrs.toFixed(1)} hrs logged!`);
+    showError('');
+  } catch(e) {} finally { btn.disabled = false; }
+}
+
+async function submitRequest(resourceId) {
+  const r = RESOURCES.find(x => x.id === resourceId);
+  const {balance} = getStudentData();
+  if (balance < r.cost) { showToast('Not enough hours.'); return; }
+  if (!currentStudentId) { showToast('Select a student first.'); return; }
+  try {
+    const req = await api({action:'addRequest', studentId:currentStudentId, resource:r.name, cost:r.cost, date:today()});
+    if (!requestsCache[currentStudentId]) requestsCache[currentStudentId] = [];
+    requestsCache[currentStudentId].push(req);
+    refreshMetrics(); refreshResources();
+    showToast(`${r.icon} Request submitted — awaiting admin approval.`);
+    showError('');
+  } catch(e) {}
+}
+
+async function resolveRequest(reqId, status, studentId, cost, resource) {
+  try {
+    await api({action:'updateRequest', requestId:reqId, status, studentId, cost, resource});
+    if (requestsCache[studentId]) {
+      const req = requestsCache[studentId].find(r => r.id === reqId);
+      if (req) req.status = status;
+    }
+    if (status === 'denied' && hoursCache[studentId]) {
+      hoursCache[studentId].push({id:'ref_'+Date.now(), studentId, project:'Refunded: '+resource, hours:cost, notes:'Request denied — hours returned', date:today()});
+    }
+    if (currentStudentId === studentId) { refreshMetrics(); refreshRecentLog(); }
+    await refreshAdminPanel();
+    showToast(status === 'approved' ? `Approved: ${resource}` : `Denied — ${cost} hr refunded.`);
+    showError('');
+  } catch(e) {}
+}
+
+function toggleAdmin() {
+  adminMode = false;
+  document.getElementById('admin-bar').style.display = 'none';
+  document.getElementById('tab-admin').style.display = 'none';
+  document.getElementById('admin-btn').style.display = '';
+  switchTab('log');
+}
+
+function showAdminLogin() {
+  openModal(`<p class="modal-title"><i class="ti ti-shield"></i> Admin login</p>
+    <label>PIN (default: 1234)</label>
+    <input type="password" id="admin-pin" placeholder="Enter PIN" style="margin-bottom:14px" />
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" onclick="doAdminLogin()">Enter</button>
+      <button onclick="closeModal()" style="color:var(--text2)">Cancel</button>
+    </div>`);
+  setTimeout(() => { const p = document.getElementById('admin-pin'); if(p) p.focus(); }, 50);
+}
+
+function doAdminLogin() {
+  const pin = document.getElementById('admin-pin');
+  if (!pin) return;
+  if (pin.value === ADMIN_PIN) {
+    adminMode = true;
+    document.getElementById('admin-bar').style.display = 'flex';
+    document.getElementById('tab-admin').style.display = '';
+    document.getElementById('admin-btn').style.display = 'none';
+    closeModal(); switchTab('admin');
+    showToast('Admin mode active.');
+  } else { showToast('Incorrect PIN.'); }
+}
+
+function showAddStudent() {
+  openModal(`<p class="modal-title">Add a student</p>
+    <label>Student name</label>
+    <input type="text" id="new-student-name" placeholder="e.g. Jordan P." style="margin-bottom:14px" />
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" onclick="addStudent()">Add student</button>
+      <button onclick="closeModal()" style="color:var(--text2)">Cancel</button>
+    </div>`);
+  setTimeout(() => { const n = document.getElementById('new-student-name'); if(n) n.focus(); }, 50);
+}
+
+async function addStudent() {
+  const nameEl = document.getElementById('new-student-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) { showToast('Enter a name.'); return; }
+  try {
+    const s = await api({action:'addStudent', name});
+    students.push(s);
+    currentStudentId = s.id;
+    hoursCache[s.id] = [];
+    requestsCache[s.id] = [];
+    refreshSelect(); refreshMetrics(); refreshRecentLog();
+    closeModal();
+    showToast(`${name} added!`);
+    showError('');
+  } catch(e) {}
+}
+
+function openModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+document.getElementById('modal-overlay').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadStudents();
+</script>
+</body>
+</html>
